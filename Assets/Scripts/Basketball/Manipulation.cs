@@ -10,7 +10,7 @@ public class Manipulation : MonoBehaviour
     private Vector3 firstMousePos;
     private Vector3 secondMousePos;
     private bool ballHasBeenThrown = false;
-    private bool hasCollidedOnce = false;
+    private bool ballHasCollidedOnce = false;
     private Vector3[] ballPositions;
     private Quaternion[] ballRotations;
     private CameraAngle camAngleScript;
@@ -83,12 +83,11 @@ public class Manipulation : MonoBehaviour
     void OnMouseUp()
     {
         // Signals the ball has been released applying the accumulated velocity to its rigidbody
-        ballRigidbody.AddRelativeForce(new Vector3(ballVelocity / 2, ballVelocity, 0));
+        ballRigidbody.AddRelativeForce(new Vector3(ballVelocity / 2.7f, ballVelocity * 1.1f, 0));
         ballHasBeenThrown = true;
         ballVelocity = 0;
+        BallsManager.balls--;
     }
-
-#endif
 
     void MakeBallFollowMouse()
     {
@@ -98,17 +97,19 @@ public class Manipulation : MonoBehaviour
         ballTransform.position = ballPos;
     }
 
+#endif
+
     void ChangeBallSpeed()
     {
         secondMousePos = Input.mousePosition;
         secondMousePos.z = 1;
         secondMousePos = Camera.main.ScreenToWorldPoint(secondMousePos);
-        if (firstMousePos.y < secondMousePos.y)
+        if (firstMousePos.y < secondMousePos.y - 0.08f)
         {
             ballVelocity += ballAcceleration;
-            if (ballVelocity > 545)
+            if (ballVelocity > 590)
             {
-                ballVelocity = 545;
+                ballVelocity = 590;
             }
         }
         else if (firstMousePos == secondMousePos)
@@ -128,13 +129,13 @@ public class Manipulation : MonoBehaviour
 
     void OnCollisionEnter()
     {
-        if(!hasCollidedOnce) {
+        if(!ballHasCollidedOnce) {
             ballHasBeenThrown = false;
             int randIndex = Random.Range(0, 11);
             GenerateNewBallWithPositionIndex(randIndex);
             camAngleScript.ChangeAngle(randIndex);
             DeleteThrownBall();
-            hasCollidedOnce = true;
+            ballHasCollidedOnce = true;
         } 
     }
 
@@ -147,6 +148,6 @@ public class Manipulation : MonoBehaviour
 
     void DeleteThrownBall()
     {
-        Destroy(gameObject, 4f);
+        Destroy(gameObject, 3f);
     }
 }
