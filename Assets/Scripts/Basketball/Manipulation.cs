@@ -23,6 +23,7 @@ public class Manipulation : MonoBehaviour
         ballRigidbody = GetComponent<Rigidbody>();
         ballTransform = GetComponent<Transform>();
         InitializeBallPositionsOnField();
+        ballVelocity = 100;
     }
 
     void InitializeBallPositionsOnField()
@@ -83,9 +84,9 @@ public class Manipulation : MonoBehaviour
     void OnMouseUp()
     {
         // Signals the ball has been released applying the accumulated velocity to its rigidbody
-        ballRigidbody.AddRelativeForce(new Vector3(ballVelocity / 2.7f, ballVelocity * 1.1f, 0));
+        ballRigidbody.AddRelativeForce(new Vector3(ballVelocity * 2.5f, ballVelocity * 5.3f, 0));
         ballHasBeenThrown = true;
-        ballVelocity = 0;
+        ballVelocity = 100;
         BallsManager.balls--;
     }
 
@@ -107,20 +108,20 @@ public class Manipulation : MonoBehaviour
         if (firstMousePos.y < secondMousePos.y - 0.08f)
         {
             ballVelocity += ballAcceleration;
-            if (ballVelocity > 590)
+            if (ballVelocity > 107)
             {
-                ballVelocity = 590;
+                ballVelocity = 107;
             }
         }
         else if (firstMousePos == secondMousePos)
         {
-            if (ballVelocity - ballAcceleration * 20 >= 0)
+            if (ballVelocity - ballAcceleration * 20 >= 100)
             {
                 ballVelocity -= ballAcceleration * 20;
             }
-            else if (ballVelocity != 0)
+            else if (ballVelocity != 100)
             {
-                ballVelocity = 0;
+                ballVelocity = 100;
             }
         }
         firstMousePos = secondMousePos;
