@@ -7,23 +7,33 @@ public class Manipulation : MonoBehaviour
     private Transform ballTransform;
     private float ballVelocity;
     private Vector3 ballPos;
-    private Vector3 firstMousePos;
-    private Vector3 secondMousePos;
     private bool ballHasBeenThrown = false;
     private bool ballHasCollidedOnce = false;
     private Vector3[] ballPositions;
     private Quaternion[] ballRotations;
     private CameraAngle camAngleScript;
 
+#if UNITY_STANDALONE
+    private Vector3 firstMousePos;
+    private Vector3 secondMousePos;
+#endif
+#if UNITY_ANDROID
+    private SphereCollider ballColl;
+#endif
+
     public float ballAcceleration;
 
     void Start()
     {
+        #if UNITY_ANDROID
+        Input.multiTouchEnabled = false;
+        ballColl = GetComponent<SphereCollider>();
+        #endif
         camAngleScript = Camera.main.GetComponent<CameraAngle>();
         ballRigidbody = GetComponent<Rigidbody>();
         ballTransform = GetComponent<Transform>();
         InitializeBallPositionsOnField();
-        ballVelocity = 100;
+        ballVelocity = 0;
     }
 
     void InitializeBallPositionsOnField()
@@ -54,13 +64,85 @@ public class Manipulation : MonoBehaviour
         ballRotations[10] = Quaternion.Euler(0, -91.96101f, 0);
     }
 
-    void FixedUpdate()
+    void Update()
     {
         if (ballHasBeenThrown)
         {
             ballTransform.RotateAround(ballTransform.position, ballTransform.forward, Time.deltaTime * 180f);
         }
+#if UNITY_ANDROID
+        if (Input.touchCount == 1)
+        {
+            Touch firstTouch = Input.GetTouch(0);
+            if (BallIsTouched(firstTouch))
+            {
+                if (firstTouch.phase == TouchPhase.Began)
+                {
+                    if (ballRigidbody.isKinematic)
+                    {
+                        ballRigidbody.isKinematic = false;
+                    }
+                }
+                if (firstTouch.phase == TouchPhase.Moved || firstTouch.phase == TouchPhase.Stationary)
+                {
+                    MakeBallFollowFinger(firstTouch);
+                    ChangeBallSpeed(firstTouch);
+                    Debug.Log(ballVelocity);
+                }
+                if (firstTouch.phase == TouchPhase.Ended)
+                {
+                    ballRigidbody.AddRelativeForce(new Vector3(ballVelocity * 2.5f, ballVelocity * 5.3f, 0));
+                    ballHasBeenThrown = true;
+                    ballVelocity = 0;
+                    BallsManager.balls--;
+                }
+            }
+        }
+#endif
     }
+
+#if UNITY_ANDROID
+
+    bool BallIsTouched(Touch t)
+    {
+        RaycastHit hit = new RaycastHit();
+        Ray ray = Camera.main.ScreenPointToRay(t.position);
+        return ballColl.Raycast(ray, out hit, 1f);
+    }
+
+    void MakeBallFollowFinger(Touch t)
+    {
+        Vector3 newBallPos = new Vector3(t.position.x, t.position.y, 1);
+        ballTransform.position = Camera.main.ScreenToWorldPoint(newBallPos);
+    }
+
+    void ChangeBallSpeed(Touch t)
+    {
+        if(t.phase == TouchPhase.Moved)
+        {
+            if(ballVelocity == 0)
+            {
+                ballVelocity = 100;
+            }
+            ballVelocity += ballAcceleration;
+            if (ballVelocity > 106)
+            {
+                ballVelocity = 106;
+            }
+        }
+        else
+        {
+            if (ballVelocity - ballAcceleration * 2 >= 100)
+            {
+                ballVelocity -= ballAcceleration * 2;
+            }
+            else
+            {
+                ballVelocity = 0;
+            }
+        }
+    }
+#endif
 
 #if UNITY_STANDALONE
 
@@ -69,6 +151,7 @@ public class Manipulation : MonoBehaviour
         if (ballRigidbody.isKinematic)
         {
             ballRigidbody.isKinematic = false;
+            ballRigidbody.WakeUp();
         }
         firstMousePos = Input.mousePosition;
         firstMousePos.z = 1;
@@ -86,7 +169,7 @@ public class Manipulation : MonoBehaviour
         // Signals the ball has been released applying the accumulated velocity to its rigidbody
         ballRigidbody.AddRelativeForce(new Vector3(ballVelocity * 2.5f, ballVelocity * 5.3f, 0));
         ballHasBeenThrown = true;
-        ballVelocity = 100;
+        ballVelocity = 0;
         BallsManager.balls--;
     }
 
@@ -98,8 +181,6 @@ public class Manipulation : MonoBehaviour
         ballTransform.position = ballPos;
     }
 
-#endif
-
     void ChangeBallSpeed()
     {
         secondMousePos = Input.mousePosition;
@@ -107,37 +188,45 @@ public class Manipulation : MonoBehaviour
         secondMousePos = Camera.main.ScreenToWorldPoint(secondMousePos);
         if (firstMousePos.y < secondMousePos.y - 0.08f)
         {
-            ballVelocity += ballAcceleration;
-            if (ballVelocity > 107)
+            if(ballVelocity == 0)
             {
-                ballVelocity = 107;
+                ballVelocity = 100;
+            }
+            ballVelocity += ballAcceleration;
+            if (ballVelocity > 106)
+            {
+                ballVelocity = 106;
             }
         }
         else if (firstMousePos == secondMousePos)
         {
-            if (ballVelocity - ballAcceleration * 20 >= 100)
+            if (ballVelocity - ballAcceleration * 3 >= 100)
             {
-                ballVelocity -= ballAcceleration * 20;
+                ballVelocity -= ballAcceleration * 3;
             }
-            else if (ballVelocity != 100)
+            else
             {
-                ballVelocity = 100;
+                ballVelocity = 0;
             }
         }
         firstMousePos = secondMousePos;
-        Debug.Log(ballVelocity);
     }
 
-    void OnCollisionEnter()
+#endif
+
+    void OnCollisionEnter(Collision collision)
     {
         if(!ballHasCollidedOnce) {
             ballHasBeenThrown = false;
             int randIndex = Random.Range(0, 11);
             GenerateNewBallWithPositionIndex(randIndex);
             camAngleScript.ChangeAngle(randIndex);
-            DeleteThrownBall();
             ballHasCollidedOnce = true;
-        } 
+        }
+        if (collision.collider.CompareTag("Environment"))
+        {
+            DeleteThrownBall();
+        }
     }
 
     void GenerateNewBallWithPositionIndex(int index)
@@ -149,6 +238,6 @@ public class Manipulation : MonoBehaviour
 
     void DeleteThrownBall()
     {
-        Destroy(gameObject, 3f);
+        Destroy(gameObject, 1f);
     }
 }
