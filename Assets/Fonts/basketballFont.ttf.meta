@@ -1,0 +1,21 @@
+fileFormatVersion: 2
+guid: f65175e45912d6143aa72fc53bcf620b
+timeCreated: 1486497773
+licenseType: Free
+TrueTypeFontImporter:
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: Varsity Playbook
+  fontNames:
+  - Varsity Playbook
+  fallbackFontReferences: []
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

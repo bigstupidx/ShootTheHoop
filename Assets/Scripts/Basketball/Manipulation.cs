@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.SceneManagement;
 using System.Collections;
 
 public class Manipulation : MonoBehaviour
@@ -87,14 +88,16 @@ public class Manipulation : MonoBehaviour
                 {
                     MakeBallFollowFinger(firstTouch);
                     ChangeBallSpeed(firstTouch);
-                    Debug.Log(ballVelocity);
                 }
                 if (firstTouch.phase == TouchPhase.Ended)
                 {
                     ballRigidbody.AddRelativeForce(new Vector3(ballVelocity * 2.5f, ballVelocity * 5.3f, 0));
                     ballHasBeenThrown = true;
                     ballVelocity = 0;
-                    BallsManager.balls--;
+                    if(BallsManager.balls > 0 && SceneManager.GetActiveScene().name == "NormalMode")
+                    {
+                        BallsManager.balls--;
+                    }
                 }
             }
         }

@@ -34,6 +34,11 @@ public class ScoreCollision : MonoBehaviour {
         {
             ScoreManager.successfulShotsInARow = 0;
             flamesManagerScript.DisableFlames();
+            if((SceneManager.GetActiveScene().name == "NormalMode" && BallsManager.balls == 0) ||
+                (SceneManager.GetActiveScene().name == "TimeMode" && (int)TimerManager.timeLeft == 0))
+            {
+                GameOverManager.gameOver = true;
+            }
         }
     }
 }
