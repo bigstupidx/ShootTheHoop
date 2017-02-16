@@ -7,9 +7,11 @@ public class ScoreCollision : MonoBehaviour {
     private bool ballHasHitScoreCircle;
     public ComboManager comboManagerScript;
     public FlamesManager flamesManagerScript;
+    private Manipulation manipulationScript;
 
     void Start()
     {
+        manipulationScript = GetComponent<Manipulation>();
         ballHasHitScoreCircle = false;
     }
                                 
@@ -34,7 +36,7 @@ public class ScoreCollision : MonoBehaviour {
         {
             ScoreManager.successfulShotsInARow = 0;
             flamesManagerScript.DisableFlames();
-            if((SceneManager.GetActiveScene().name == "NormalMode" && BallsManager.balls == 0) ||
+            if((SceneManager.GetActiveScene().name == "NormalMode" && BallsManager.balls == 0 && !manipulationScript.ballHasBeenThrown) ||
                 (SceneManager.GetActiveScene().name == "TimeMode" && (int)TimerManager.timeLeft == 0))
             {
                 GameOverManager.gameOver = true;

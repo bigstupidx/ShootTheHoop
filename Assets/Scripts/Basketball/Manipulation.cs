@@ -8,11 +8,12 @@ public class Manipulation : MonoBehaviour
     private Transform ballTransform;
     private float ballVelocity;
     private Vector3 ballPos;
-    private bool ballHasBeenThrown = false;
     private bool ballHasCollidedOnce = false;
     private Vector3[] ballPositions;
     private Quaternion[] ballRotations;
     private CameraAngle camAngleScript;
+
+    public bool ballHasBeenThrown = false;
 
 #if UNITY_STANDALONE
     private Vector3 firstMousePos;

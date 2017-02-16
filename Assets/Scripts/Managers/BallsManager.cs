@@ -12,7 +12,7 @@ public class BallsManager : MonoBehaviour {
     
 	// Use this for initialization
 	void Start () {
-        balls = 1;
+        balls = 10;
 #if UNITY_STANDALONE
         ballsTextFontSize = 30;
 #elif UNITY_ANDROID

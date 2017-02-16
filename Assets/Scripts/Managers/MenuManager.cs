@@ -10,6 +10,7 @@ public class MenuManager : MonoBehaviour {
     public GameObject loggedOutPanel;
     public GameObject controlsPanel;
     public GameObject gameModesPanel;
+    public GameObject leaderboardPanel;
     public GameObject mainMenuPanel;
     public GameObject gameOverPanel;
     public Text finalScoreText;
@@ -48,18 +49,28 @@ public class MenuManager : MonoBehaviour {
         mainMenuPanel.SetActive(!show);
     }
 
+    public void ShowLeaderboardMenu(bool show)
+    {
+        leaderboardPanel.SetActive(show);
+        mainMenuPanel.SetActive(!show);
+    }
+
     public void ShowGameOverMenu(bool show)
     {
-        if(show)
+        gameOverPanel.SetActive(show);
+        mainMenuPanel.SetActive(!show);
+        if (show)
         {
             finalScoreText.text = "Your Final Score: " + GameOverManager.finalScore;
+            if(!FBManager.newHighscore)
+            {
+                gameOverPanel.transform.Find("SetHighscoreButton").gameObject.SetActive(false);
+            }
         }
         else
         {
             Destroy(GameObject.Find("GameOverManager"));
         }
-        gameOverPanel.SetActive(show);
-        mainMenuPanel.SetActive(!show);
     }
 
     public void ShowMainMenu(bool show)
