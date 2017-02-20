@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UnityEngine.UI;
 using System.Collections;
 
 public class ComboManager : MonoBehaviour {
@@ -15,7 +14,7 @@ public class ComboManager : MonoBehaviour {
         anim = GetComponent<Animator>();
 	}
 
-    public void showText()
+    public void ShowText()
     {
         if (ScoreManager.successfulShotsInARow > 1) {
             comboText.text = ScoreManager.successfulShotsInARow + "x Combo";

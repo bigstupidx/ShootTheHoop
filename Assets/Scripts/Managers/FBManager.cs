@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Facebook.Unity;
 
+
 public class FBManager : MonoBehaviour {
 
     public Text userName;
@@ -204,10 +205,34 @@ public class FBManager : MonoBehaviour {
                         });
     }
 
+    public void Share()
+    {
+        FB.ShareLink(
+            contentURL: new System.Uri("https://fb.me/166220077214954"),
+            contentTitle: "Shoot The Hoop",
+            contentDescription: "Download link to this 3D basketball game",
+            photoURL: new System.Uri("http://oi63.tinypic.com/29oo2zn.jpg"),
+            callback: delegate(IShareResult res) {
+                if(!string.IsNullOrEmpty(res.Error) || res.Cancelled)
+                {
+                    Debug.Log(res.Error);
+                }
+                else if (!string.IsNullOrEmpty(res.PostId))
+                {
+                    Debug.Log(res.PostId);
+                }
+                else
+                {
+                    Debug.Log("Share succeeded");
+                }
+            });
+    }
+
     public void DealWithFBPanels(bool isLoggedIn)
     {
         if(isLoggedIn)
         {
+            CheckAndDeleteReceivedRequests();
             menuManagerScript.ShowLoggedOutPanel(false);
             menuManagerScript.ShowLoggedInPanel(true);
             if (GameOverManager.gameOver)
@@ -236,12 +261,99 @@ public class FBManager : MonoBehaviour {
         }
     }
 
+    void DisplayUsername(IResult res)
+    {
+        if (string.IsNullOrEmpty(res.Error))
+        {
+            userName.text = res.ResultDictionary["name"].ToString();
+        }
+        else
+        {
+            Debug.Log(res.Error);
+        }
+    }
+
+    void DisplayProfilePic(IGraphResult res)
+    {
+        if (string.IsNullOrEmpty(res.Error) && res.Texture != null)
+        {
+            userProfilePic.sprite = Sprite.Create(res.Texture, new Rect(0, 0, 130, 130), new Vector2());
+        }
+        else
+        {
+            Debug.Log(res.Error);
+        }
+    }
+
+    void CheckAndDeleteReceivedRequests()
+    {
+        FB.API("me/apprequests", HttpMethod.GET, delegate (IGraphResult res) {
+            Debug.Log(res.RawResult);
+            List<object> userRequests = (List<object>)res.ResultDictionary["data"];
+            foreach(object req in userRequests)
+            {
+                string reqId = ((Dictionary<string, object>)req)["id"].ToString();
+                FB.API(reqId, HttpMethod.DELETE, delegate(IGraphResult delRes)
+                {
+                    Debug.Log(delRes.RawResult);
+                });
+            }
+        });
+    }
+
+    public void ResetHighscore()
+    {
+        if(AccessToken.CurrentAccessToken.Permissions.ToCommaSeparateList().Contains("publish_actions"))
+        {
+            FB.API("/me/scores", HttpMethod.DELETE, delegate(IGraphResult res) {
+                if(string.IsNullOrEmpty(res.Error) && !res.Cancelled)
+                {
+                    Debug.Log(res.RawResult);
+                    UpdatePlayerHighscore();
+                }
+                else
+                {
+                    Debug.Log(res.Error);
+                }
+            });
+        }
+        else
+        {
+            FB.LogInWithPublishPermissions(new List<string>() { "publish_actions" }, delegate (ILoginResult loginRes)
+            {
+                if (loginRes.Error == null && !loginRes.Cancelled)
+                {
+                    FB.API("/me/scores", HttpMethod.DELETE, delegate (IGraphResult res) {
+                        if (string.IsNullOrEmpty(res.Error) && !res.Cancelled)
+                        {
+                            Debug.Log(res.RawResult);
+                            UpdatePlayerHighscore();
+                        }
+                        else
+                        {
+                            Debug.Log(res.Error);
+                        }
+                    });
+                }
+                else if (loginRes.Cancelled)
+                {
+                    Debug.Log("Permission cancelled");
+                }
+                else
+                {
+                    Debug.Log(loginRes.Error);
+                }
+            });
+        }
+    }
+
     void CheckForNewHighscore()
     {
         FB.API("/me/scores?fields=score", HttpMethod.GET, delegate(IGraphResult res) {
             List<object> playerScoresList = (List<object>)res.ResultDictionary["data"];
             if((playerScoresList.Count == 0 && GameOverManager.finalScore > 0) 
-                || (playerScoresList.Count != 0 && int.Parse(((Dictionary<string, object>)playerScoresList[0])["score"].ToString()) < GameOverManager.finalScore))
+                || (playerScoresList.Count != 0 && int.Parse(((Dictionary<string, object>)playerScoresList[0])["score"].ToString()) 
+                                                   < GameOverManager.finalScore))
             {
                 newHighscore = true;
             }
@@ -258,33 +370,9 @@ public class FBManager : MonoBehaviour {
         FB.API("/me/scores?fields=score", HttpMethod.GET, DisplayHighscore);
     }
 
-    void DisplayUsername(IResult res)
-    {
-        if(res.Error == null)
-        {
-            userName.text = res.ResultDictionary["name"].ToString();
-        }
-        else
-        {
-            Debug.Log(res.Error);
-        }
-    }
-
-    void DisplayProfilePic(IGraphResult res)
-    {
-        if(res.Error == null && res.Texture != null)
-        {
-            userProfilePic.sprite = Sprite.Create(res.Texture, new Rect(0, 0, 130, 130), new Vector2());
-        }
-        else
-        {
-            Debug.Log(res.Error);
-        }
-    }
-
     void DisplayHighscore(IResult res)
     {
-        if (res.Error == null)
+        if (string.IsNullOrEmpty(res.Error))
         {
             List<object> playerScoresList = (List<object>)res.ResultDictionary["data"];
             if (playerScoresList.Count > 0)
@@ -301,4 +389,5 @@ public class FBManager : MonoBehaviour {
             Debug.Log(res.Error);
         }
     }
+
 }
