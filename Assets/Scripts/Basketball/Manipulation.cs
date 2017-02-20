@@ -9,11 +9,13 @@ public class Manipulation : MonoBehaviour
     private float ballVelocity;
     private Vector3 ballPos;
     private bool ballHasCollidedOnce = false;
+    private bool ballHasBeenThrown = false;
     private Vector3[] ballPositions;
     private Quaternion[] ballRotations;
     private CameraAngle camAngleScript;
 
-    public bool ballHasBeenThrown = false;
+    private float xVelMultiplier = 2.5f;
+    private float yVelMultiplier = 5.3f;
 
 #if UNITY_STANDALONE
     private Vector3 firstMousePos;
@@ -92,12 +94,20 @@ public class Manipulation : MonoBehaviour
                 }
                 if (firstTouch.phase == TouchPhase.Ended)
                 {
-                    ballRigidbody.AddRelativeForce(new Vector3(ballVelocity * 2.5f, ballVelocity * 5.3f, 0));
+                    ballRigidbody.AddRelativeForce(new Vector3(ballVelocity * xVelMultiplier, ballVelocity * yVelMultiplier, 0));
                     ballHasBeenThrown = true;
                     ballVelocity = 0;
-                    if(BallsManager.balls > 0 && SceneManager.GetActiveScene().name == "NormalMode")
+                    if(SceneManager.GetActiveScene().name == "NormalMode")
                     {
-                        BallsManager.balls--;
+                        if(NormalModeManager.balls > 0)
+                        {
+                            NormalModeManager.balls--;
+                        }
+                        NormalModeManager.airborneBalls++;
+                    }
+                    else
+                    {
+                        TimeModeManager.airborneBalls++;
                     }
                 }
             }
@@ -171,10 +181,16 @@ public class Manipulation : MonoBehaviour
     void OnMouseUp()
     {
         // Signals the ball has been released applying the accumulated velocity to its rigidbody
-        ballRigidbody.AddRelativeForce(new Vector3(ballVelocity * 2.5f, ballVelocity * 5.3f, 0));
+        ballRigidbody.AddRelativeForce(new Vector3(ballVelocity * xVelMultiplier, ballVelocity * yVelMultiplier, 0));
         ballHasBeenThrown = true;
         ballVelocity = 0;
-        BallsManager.balls--;
+        if(SceneManager.GetActiveScene().name == "NormalMode") {
+            NormalModeManager.balls--;
+            NormalModeManager.airborneBalls++;
+        }
+        else {
+            TimeModeManager.airborneBalls++;
+        }
     }
 
     void MakeBallFollowMouse()
@@ -222,15 +238,23 @@ public class Manipulation : MonoBehaviour
     {
         if(!ballHasCollidedOnce) {
             ballHasBeenThrown = false;
-            int randIndex = Random.Range(0, 11);
-            GenerateNewBallWithPositionIndex(randIndex);
-            camAngleScript.ChangeAngle(randIndex);
+            if((SceneManager.GetActiveScene().name == "NormalMode" && NormalModeManager.balls > 0) || SceneManager.GetActiveScene().name == "TimeMode")
+            {
+                ChangeShootingPosition();
+            }
             ballHasCollidedOnce = true;
         }
         if (collision.collider.CompareTag("Environment"))
         {
             DeleteThrownBall();
         }
+    }
+
+    public void ChangeShootingPosition()
+    {
+        int randIndex = Random.Range(0, 11);
+        GenerateNewBallWithPositionIndex(randIndex);
+        camAngleScript.ChangeAngle(randIndex);
     }
 
     void GenerateNewBallWithPositionIndex(int index)
