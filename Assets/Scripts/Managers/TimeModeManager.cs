@@ -38,5 +38,9 @@ public class TimeModeManager : MonoBehaviour {
             timeLeft -= Time.deltaTime;
             timerText.text = "Timer: " + (int)timeLeft;
         }
+        else if(TimeModeManager.airborneBalls == 0)
+        {
+            GameOverManager.gameOver = true;
+        }
 	}
 }

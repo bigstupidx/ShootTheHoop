@@ -61,7 +61,7 @@ public class ScoreCollision : MonoBehaviour {
                     ScoreManager.successfulShotsInARow = 0;
                     flamesManagerScript.DisableFlames();
                     if ((SceneManager.GetActiveScene().name == "NormalMode" && NormalModeManager.balls == 0 && NormalModeManager.airborneBalls == 0) ||
-                        (SceneManager.GetActiveScene().name == "TimeMode" && (int)TimeModeManager.timeLeft == 0) && TimeModeManager.airborneBalls == 0)
+                        (SceneManager.GetActiveScene().name == "TimeMode" && (int)TimeModeManager.timeLeft == 0 && TimeModeManager.airborneBalls == 0))
                     {
                         GameOverManager.gameOver = true;
                     }

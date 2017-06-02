@@ -17,7 +17,7 @@ public class MenuManager : MonoBehaviour {
     public Text finalScoreText;
 
 #if UNITY_ANDROID
-    public FBManager fbManagerScript;
+    private FBManager fbManagerScript;
     private int ballPanelWidth = 1400;
     private int ballPanelHeight = 1100;
 #elif UNITY_STANDALONE
@@ -39,6 +39,7 @@ public class MenuManager : MonoBehaviour {
 
     void Awake()
     {
+        GetComponent<CanvasScaler>().referenceResolution = new Vector2(1366, 768);
         GameObject.Find("FBManager").gameObject.SetActive(false);
         ballPanel.GetComponent<RectTransform>().sizeDelta = new Vector2(ballPanelWidth, ballPanelHeight);
         if (GameOverManager.gameOver)
@@ -54,6 +55,8 @@ public class MenuManager : MonoBehaviour {
 #elif UNITY_ANDROID
     void Awake()
     {
+        GetComponent<CanvasScaler>().referenceResolution = new Vector2(1080, 1920);
+        fbManagerScript = GameObject.Find("FBManager").GetComponent<FBManager>();
         ballPanel.GetComponent<RectTransform>().sizeDelta = new Vector2(ballPanelWidth, ballPanelHeight);
     }
 #endif

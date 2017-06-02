@@ -7,22 +7,26 @@ public class Manipulation : MonoBehaviour
     private Rigidbody ballRigidbody;
     private Transform ballTransform;
     private float ballVelocity;
-    private Vector3 ballPos;
     private bool ballHasCollidedOnce = false;
     private bool ballHasBeenThrown = false;
     private Vector3[] ballPositions;
     private Quaternion[] ballRotations;
     private CameraAngle camAngleScript;
 
-    private float xVelMultiplier = 2.5f;
-    private float yVelMultiplier = 5.3f;
+    private float xVelMultiplier = 1.6f;
+    private float yVelMultiplier = 3.1f;
 
 #if UNITY_STANDALONE
     private Vector3 firstMousePos;
     private Vector3 secondMousePos;
+    private Vector3 ballPos;
+    private float fingerOffset = 0.08f;
 #endif
 #if UNITY_ANDROID
     private SphereCollider ballColl;
+    private Vector3 firstTouchPos;
+    private Vector3 secondTouchPos;
+    private float fingerOffset = 0.06f;
 #endif
 
     public float ballAcceleration;
@@ -82,10 +86,9 @@ public class Manipulation : MonoBehaviour
             {
                 if (firstTouch.phase == TouchPhase.Began)
                 {
-                    if (ballRigidbody.isKinematic)
-                    {
-                        ballRigidbody.isKinematic = false;
-                    }
+                    firstTouchPos = firstTouch.position;
+                    firstTouchPos.z = 1;
+                    firstTouchPos = Camera.main.ScreenToWorldPoint(firstTouchPos);
                 }
                 if (firstTouch.phase == TouchPhase.Moved || firstTouch.phase == TouchPhase.Stationary)
                 {
@@ -94,6 +97,11 @@ public class Manipulation : MonoBehaviour
                 }
                 if (firstTouch.phase == TouchPhase.Ended)
                 {
+                    if (ballRigidbody.isKinematic)
+                    {
+                        ballRigidbody.isKinematic = false;
+                    }
+                    Debug.Log(ballVelocity);
                     ballRigidbody.AddRelativeForce(new Vector3(ballVelocity * xVelMultiplier, ballVelocity * yVelMultiplier, 0));
                     ballHasBeenThrown = true;
                     ballVelocity = 0;
@@ -132,27 +140,44 @@ public class Manipulation : MonoBehaviour
 
     void ChangeBallSpeed(Touch t)
     {
-        if(t.phase == TouchPhase.Moved)
+        if (t.phase == TouchPhase.Moved)
         {
-            if(ballVelocity == 0)
+            secondTouchPos = t.position;
+            secondTouchPos.z = 1;
+            secondTouchPos = Camera.main.ScreenToWorldPoint(secondTouchPos);
+            if(firstTouchPos.y < secondTouchPos.y - fingerOffset)
             {
-                ballVelocity = 100;
+                if(ballVelocity >= 150)
+                {
+                    ballVelocity += 2;
+                }
+                else
+                {
+                    ballVelocity += ballAcceleration;
+                }
+                if (ballVelocity > 160)
+                {
+                    ballVelocity = 160;
+                }
             }
-            ballVelocity += ballAcceleration;
-            if (ballVelocity > 106)
-            {
-                ballVelocity = 106;
-            }
+            firstTouchPos = secondTouchPos;
         }
         else
         {
-            if (ballVelocity - ballAcceleration * 2 >= 100)
+            if(ballVelocity > 150)
             {
-                ballVelocity -= ballAcceleration * 2;
+                ballVelocity -= 2;
             }
             else
             {
-                ballVelocity = 0;
+                if (ballVelocity - ballAcceleration >= 0)
+                {
+                    ballVelocity -= ballAcceleration;
+                }
+                else
+                {
+                    ballVelocity = 0;
+                }
             }
         }
     }
@@ -162,11 +187,6 @@ public class Manipulation : MonoBehaviour
 
     void OnMouseDown()
     {
-        if (ballRigidbody.isKinematic)
-        {
-            ballRigidbody.isKinematic = false;
-            ballRigidbody.WakeUp();
-        }
         firstMousePos = Input.mousePosition;
         firstMousePos.z = 1;
         firstMousePos = Camera.main.ScreenToWorldPoint(firstMousePos);
@@ -181,6 +201,11 @@ public class Manipulation : MonoBehaviour
     void OnMouseUp()
     {
         // Signals the ball has been released applying the accumulated velocity to its rigidbody
+        if (ballRigidbody.isKinematic)
+        {
+            ballRigidbody.isKinematic = false;
+            ballRigidbody.WakeUp();
+        }
         ballRigidbody.AddRelativeForce(new Vector3(ballVelocity * xVelMultiplier, ballVelocity * yVelMultiplier, 0));
         ballHasBeenThrown = true;
         ballVelocity = 0;
@@ -206,27 +231,60 @@ public class Manipulation : MonoBehaviour
         secondMousePos = Input.mousePosition;
         secondMousePos.z = 1;
         secondMousePos = Camera.main.ScreenToWorldPoint(secondMousePos);
-        if (firstMousePos.y < secondMousePos.y - 0.08f)
+        //if (firstMousePos.y < secondMousePos.y - fingerOffset)
+        //{
+        //    if(ballVelocity == 0)
+        //    {
+        //        ballVelocity = 100;
+        //    }
+        //    ballVelocity += ballAcceleration;
+        //    if (ballVelocity > 106)
+        //    {
+        //        ballVelocity = 106;
+        //    }
+        //}
+        //else if (firstMousePos == secondMousePos)
+        //{
+        //    if (ballVelocity - ballAcceleration * 3 >= 100)
+        //    {
+        //        ballVelocity -= ballAcceleration * 3;
+        //    }
+        //    else
+        //    {
+        //        ballVelocity = 0;
+        //    }
+        //}
+        if(firstMousePos.y < secondMousePos.y - fingerOffset)
         {
-            if(ballVelocity == 0)
+            if(ballVelocity >= 150)
             {
-                ballVelocity = 100;
+                ballVelocity += 1;
             }
-            ballVelocity += ballAcceleration;
-            if (ballVelocity > 106)
+            else
             {
-                ballVelocity = 106;
+                ballVelocity += ballAcceleration;
+            }
+            if (ballVelocity > 160)
+            {
+                ballVelocity = 160;
             }
         }
         else if (firstMousePos == secondMousePos)
         {
-            if (ballVelocity - ballAcceleration * 3 >= 100)
+            if(ballVelocity > 150)
             {
-                ballVelocity -= ballAcceleration * 3;
+                ballVelocity -= 1;
             }
             else
             {
-                ballVelocity = 0;
+                if (ballVelocity - ballAcceleration >= 0)
+                {
+                    ballVelocity -= ballAcceleration;
+                }
+                else
+                {
+                    ballVelocity = 0;
+                }
             }
         }
         firstMousePos = secondMousePos;
